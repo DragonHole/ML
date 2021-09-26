@@ -1,19 +1,27 @@
-from math import log 
-import operator as op
+from math import log
+import operator 
 # 连numpy都不用，对新手简直太友好了。
 
+"""
+（不确定正不正确，但本文件在用的）用词
+feature: (integer)  , position(index) of the feature in the feature vector
+label  : (string)   , literal name of the feature
+class  : (any-value), y-value
+"""
+
+
 def calcShannonEntropy(dataSet):
-    num_train_examples = len(dataSet)   # dataSet is a numpy matrix 
+    num_train_examples = len(dataSet)   # dataSet is a 2 dimensional array 
     class_counts = {}
     for example in dataSet:
-        currentLabel = example[-1]
-        if currentLabel not in class_counts.keys(): # 0 if uninitialized
-            class_counts[currentLabel] = 0
-        class_counts[currentLabel] += 1
+        currentClass = example[-1]  
+        if currentClass not in class_counts.keys(): # 0 if uninitialized
+            class_counts[currentClass] = 0
+        class_counts[currentClass] += 1
         
     shannonEntropy = 0.0
     for aClass in class_counts:
-        probability = float(class_counts[aClass]/num_train_examples)
+        probability = float(class_counts[aClass]/num_train_examples)    
         shannonEntropy -= probability*log(probability, 2)
     return shannonEntropy
 
@@ -32,7 +40,7 @@ def split_feature(dataSet, feature, crit_value):    # crit_value is the critical
 def chooseBestFeatureToSplit(dataSet):
     numFeatures = len(dataSet[0])-1     # cuz each entry also has a y value, so minus one. 
     bestEntropy = calcShannonEntropy(dataSet)    # the initial, default value, 如果找不到比这更低的熵就啥也不做
-    bestFeature = -1
+    bestFeature = -1    # index, default to no-one.
 
     for feat in range(numFeatures): # try out each feature
         featList = [example[feat] for example in dataSet]   # 从整个dataset里提一个全是那个特征的列表
@@ -48,23 +56,46 @@ def chooseBestFeatureToSplit(dataSet):
             bestFeature = feat
     return bestFeature
         
+def most_frequent(classList):
+    classCount = {}
+    for vote in classList:
+        if vote not in classCount:
+            classCount[vote] = 0
+        classCount[vote] += 1
+    sortedClassCount = sorted(classCount.items(), key=operator.itemgetter(1), reverse=True) # sort by second field(appearance count)
+    return sortedClassCount # return the most frequent class 
 
-def createTreeBranches(dataSet):
-    if 
-
+# stop when 1. no more features to split, 2. all examples have the same class(y value)       
+#
+def createTree(dataSet, labels):
+    classList = [example[-1] for example in dataSet]    # list of y-values
+    if classList.count(classList[0]) == len(classList):  # when all classes up to this branch are the same
+        return classList[0]
+    if len(classList) == 1:     # 如果只剩下一个特征，那就取多数
+        return most_frequent(classList)
+    bestFeatureIndex = chooseBestFeatureToSplit(dataSet)
+    bestFeatureLabel = labels[bestFeatureIndex]
+    myTree = {bestFeatureLabel : {}}
+    del labels[bestFeatureIndex]    # delete an object item from the list
+    featValues = [example[bestFeatureIndex] for example in dataSet] 
+    uniqueFeatValues = set(featValues)
+    for v in uniqueFeatValues:
+        subLabels = labels[:]   # because python passes by reference, don't want to touch the labels in previous stack frames
+        myTree[bestFeatureLabel][v] = createTree(split_feature(dataSet, bestFeatureIndex, v), subLabels)
+    return myTree
+    
 
 def createDataSet():
     dataSet = [[1, 1, 'yes'],
                [1, 1, 'yes'],
                [1, 0, 'no'], 
                [0, 1, 'no'], 
-               [0, 1, 'no'], 
-               [0, 1, 'yes'], 
-               [0, 1, 'yes`']]
-    classes = ['eat shit', 'drink pee']
-    return dataSet, classes
+               [0, 1, 'no']]
+    features = ['eat shit', 'drink pee']
+    return dataSet, features
 
 
 if __name__ == '__main__':
-    x, y = createDataSet()
-    print(calcShannonEntropy(x))
+    dataSet, features = createDataSet()
+    myTree = createTree(dataSet, features)
+    print(myTree)
