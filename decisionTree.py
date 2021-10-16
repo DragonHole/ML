@@ -1,3 +1,5 @@
+# ID3 algorithm 
+
 from math import log
 import operator 
 # 连numpy都不用，对新手简直太友好了。
