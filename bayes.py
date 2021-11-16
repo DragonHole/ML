@@ -1,4 +1,4 @@
-# naive bayes with assumptions 
+# bayes classifier with naive assumptions 
 
 import numpy as np
 
@@ -9,6 +9,7 @@ def createDataSet():
     classVector = [0, 1, 1]  # 1 for classied as abusive, 0 for not abusive
     return sentences, classVector
 
+# given a list of lists of words(dataset), return a list of unique words appeared in the dataset
 def createVocabList(dataSet):
     vocabSet = set([])  # set of list, disallow duplicate but retain order 
     for document in dataSet:
@@ -66,6 +67,22 @@ def classifyNB(vec2Classify, p0Vector, p1Vector, pClass1):
         return 1
     else:
         return 0
+
+def textParse(bigString):
+    import re 
+    listOfTokens = re.split(r'\W*', bigString)
+    return [token.lower() for token in listOfTokens if len(token) > 2]
+
+# returns the 30 most frequent words
+def calcMostFreq(vocabList, fullText):
+    import operator as op
+    freqDict = {}
+    for vocab in vocabList:
+        freqDict[vocab] = fullText.count(vocab)
+
+    # rank from high to low 
+    sortedFreqDict = sorted(freqDict.items(), key=op.itemgetter(1), reverse=True)
+    return sortedFreqDict[:30]  # returns the top 30
 
 if __name__ == '__main__':
     listOfSentences, classList = createDataSet() # classList是每个句子人工提供对应的标签
